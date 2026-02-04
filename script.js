@@ -1,6 +1,8 @@
 const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1ZXum0nBBdqZSwIddWKTyh5IUswc20KHGdyvB36mGh_Q/gviz/tq?tqx=out:csv&gid=0';
 
+// Global state
 let allData = [];
+let isFetching = false;
 const filters = {
     loja: 'all',
     ano: 'all',
@@ -31,6 +33,7 @@ const elements = {
  * Initialize Dashboard
  */
 async function init() {
+    console.log('Inicializando...');
     setupEventListeners();
     await fetchData();
 }
@@ -86,8 +89,12 @@ function clearFilters() {
  * Fetch and Parse CSV Data
  */
 async function fetchData() {
+    if (isFetching) return;
+    
+    isFetching = true;
     elements.loading.classList.add('active');
     console.log('Iniciando busca de dados...');
+    
     try {
         const response = await fetch(SHEETS_URL);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -95,15 +102,16 @@ async function fetchData() {
         const csvText = await response.text();
         console.log('Dados recebidos, tamanho:', csvText.length);
 
-        allData = parseCSV(csvText);
-        console.log('Dados processados:', allData.length, 'linhas');
+        const newData = parseCSV(csvText);
+        console.log('Dados processados:', newData.length, 'linhas');
 
-        if (allData.length === 0) {
+        if (newData.length === 0) {
             console.warn('Nenhum dado processado do CSV. Verifique a estrutura da planilha.');
+        } else {
+            allData = newData;
+            populateFilterOptions();
+            render();
         }
-
-        populateFilterOptions();
-        render();
     } catch (error) {
         console.error('Erro detalhado:', error);
         let msg = 'Erro ao carregar dados: ' + error.message;
@@ -115,6 +123,7 @@ async function fetchData() {
         alert(msg);
     } finally {
         elements.loading.classList.remove('active');
+        isFetching = false;
     }
 }
 
@@ -395,5 +404,15 @@ function formatCurrency(val) {
     }).format(val);
 }
 
-// Start app
-init();
+// Start app - using DOMContentLoaded for better reliability
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});
+
+// Fallback: se por algum motivo os dados não carregarem em 3 segundos, tenta forçar apenas o fetch
+setTimeout(() => {
+    if (allData.length === 0 && !isFetching) {
+        console.log('Tentativa de carregamento de segurança (fallback)...');
+        fetchData();
+    }
+}, 3000);
