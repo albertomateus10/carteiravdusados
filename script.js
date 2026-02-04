@@ -90,11 +90,11 @@ function clearFilters() {
  */
 async function fetchData() {
     if (isFetching) return;
-    
+
     isFetching = true;
     elements.loading.classList.add('active');
     console.log('Iniciando busca de dados...');
-    
+
     try {
         const response = await fetch(SHEETS_URL);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -200,11 +200,15 @@ function parseCSV(text) {
         const dateParts = rawDate.split('/');
         const year = dateParts.length === 3 ? (dateParts[2].length === 2 ? '20' + dateParts[2] : dateParts[2]) : inferYear(dateParts[1]);
 
+        let rawModelo = row[idxModelo] || 'N/A';
+        // Normaliza o modelo pegando apenas o primeiro nome (ex: "Toro Freedom" -> "Toro")
+        const modeloNormalizado = rawModelo.trim().split(' ')[0];
+
         data.push({
             data: rawDate,
             loja: row[idxLoja] || 'N/A',
             vendedor: row[idxVendedor] || 'N/A',
-            modelo: row[idxModelo] || 'N/A',
+            modelo: modeloNormalizado,
             valor: parseCurrency(row[idxValor]),
             valorRaw: row[idxValor],
             placa: row[idxPlaca] || '-',
@@ -232,7 +236,8 @@ function inferYear(monthStr) {
 function parseCurrency(val) {
     if (!val) return 0;
     // Format: "R$ 89.000,00" -> 89000
-    let clean = val.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    // Remove R$ (case insensitive because users might type it manually), dots, and convert comma to dot
+    let clean = val.replace(/R\$/gi, '').replace(/\./g, '').replace(',', '.').trim();
     return parseFloat(clean) || 0;
 }
 
