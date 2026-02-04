@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de Trocas VD | Seminovos</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <h1>Monitoramento de Trocas VD</h1>
+                <p class="subtitle">Gestão de Carteira de Usados - Grupo San Marino</p>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="filter-loja"><i class="fas fa-store"></i> Loja</label>
+                    <select id="filter-loja">
+                        <option value="all">Todas as Lojas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-ano"><i class="fas fa-calendar"></i> Ano</label>
+                    <select id="filter-ano">
+                        <option value="all">Todos os Anos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-mes"><i class="fas fa-calendar-alt"></i> Mês</label>
+                    <select id="filter-mes">
+                        <option value="all">Todos os Meses</option>
+                    </select>
+                </div>
+                <button id="refresh-btn" title="Atualizar dados"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </header>
+
+        <main>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-car"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total de Carros</span>
+                        <h2 id="stat-total-cars">-</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Valor Total Avaliado</span>
+                        <h2 id="stat-total-value">-</h2>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Ticket Médio</span>
+                        <h2 id="stat-avg-value">-</h2>
+                    </div>
+                </div>
+            </section>
+
+            <section class="table-container">
+                <div class="table-header">
+                    <h3>Lista de Veículos</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="table-search" placeholder="Pesquisa">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Loja</th>
+                                <th>Vendedor</th>
+                                <th>Modelo</th>
+                                <th>Placa</th>
+                                <th>Valor Avaliado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Table rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="loader"></div>
+                    <p>Carregando dados da planilha...</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Desenvolvido por Alberto Mateus para o Grupo San Marino | Fonte: Google Sheets</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
