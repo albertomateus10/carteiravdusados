@@ -19,7 +19,8 @@ const elements = {
     totalValue: document.getElementById('stat-total-value'),
     avgValue: document.getElementById('stat-avg-value'),
     loading: document.getElementById('loading-overlay'),
-    refreshBtn: document.getElementById('refresh-btn')
+    refreshBtn: document.getElementById('refresh-btn'),
+    clearBtn: document.getElementById('clear-filters-btn')
 };
 
 /**
@@ -55,6 +56,25 @@ function setupEventListeners() {
     });
 
     elements.refreshBtn.addEventListener('click', fetchData);
+
+    elements.clearBtn.addEventListener('click', clearFilters);
+}
+
+/**
+ * Reset all filters to default
+ */
+function clearFilters() {
+    filters.loja = 'all';
+    filters.ano = 'all';
+    filters.mes = 'all';
+    filters.search = '';
+
+    elements.filterLoja.value = 'all';
+    elements.filterAno.value = 'all';
+    elements.filterMes.value = 'all';
+    elements.search.value = '';
+
+    render();
 }
 
 /**
