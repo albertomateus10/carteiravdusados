@@ -20,7 +20,11 @@ const elements = {
     avgValue: document.getElementById('stat-avg-value'),
     loading: document.getElementById('loading-overlay'),
     refreshBtn: document.getElementById('refresh-btn'),
-    clearBtn: document.getElementById('clear-filters-btn')
+    kpiLojas: document.getElementById('kpi-lojas-list'),
+    kpiTopVendedor: document.getElementById('kpi-top-vendedor'),
+    kpiTopVendedorCount: document.getElementById('kpi-top-vendedor-count'),
+    kpiTopModelo: document.getElementById('kpi-top-modelo'),
+    kpiTopModeloCount: document.getElementById('kpi-top-modelo-count')
 };
 
 /**
@@ -55,9 +59,10 @@ function setupEventListeners() {
         render();
     });
 
-    elements.refreshBtn.addEventListener('click', fetchData);
-
-    elements.clearBtn.addEventListener('click', clearFilters);
+    elements.refreshBtn.addEventListener('click', () => {
+        clearFilters();
+        fetchData();
+    });
 }
 
 /**
@@ -318,6 +323,65 @@ function render() {
 
     if (filtered.length === 0) {
         elements.tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">Nenhum veículo encontrado para os filtros selecionados.</td></tr>';
+    }
+
+    renderExtraKPIs(filtered);
+}
+
+/**
+ * Calculate and render extra KPIs
+ */
+function renderExtraKPIs(data) {
+    if (!data || data.length === 0) {
+        elements.kpiLojas.innerHTML = '<div class="loja-item">Nenhum dado</div>';
+        elements.kpiTopVendedor.textContent = '-';
+        elements.kpiTopVendedorCount.textContent = '0 carros';
+        elements.kpiTopModelo.textContent = '-';
+        elements.kpiTopModeloCount.textContent = '0 carros';
+        return;
+    }
+
+    // Carros por Loja
+    const lojasCount = data.reduce((acc, curr) => {
+        acc[curr.loja] = (acc[curr.loja] || 0) + 1;
+        return acc;
+    }, {});
+
+    elements.kpiLojas.innerHTML = Object.entries(lojasCount)
+        .sort((a, b) => b[1] - a[1])
+        .map(([loja, count]) => `
+            <div class="loja-item">
+                <span class="loja-name">${loja}</span>
+                <span class="loja-count">${count}</span>
+            </div>
+        `).join('');
+
+    // Top Vendedor
+    const vendedorCount = data.reduce((acc, curr) => {
+        if (curr.vendedor && curr.vendedor !== 'N/A') {
+            acc[curr.vendedor] = (acc[curr.vendedor] || 0) + 1;
+        }
+        return acc;
+    }, {});
+
+    const topVendedor = Object.entries(vendedorCount).sort((a, b) => b[1] - a[1])[0];
+    if (topVendedor) {
+        elements.kpiTopVendedor.textContent = topVendedor[0];
+        elements.kpiTopVendedorCount.textContent = `${topVendedor[1]} ${topVendedor[1] === 1 ? 'carro' : 'carros'}`;
+    }
+
+    // Modelo Mais Recebido
+    const modeloCount = data.reduce((acc, curr) => {
+        if (curr.modelo && curr.modelo !== 'N/A') {
+            acc[curr.modelo] = (acc[curr.modelo] || 0) + 1;
+        }
+        return acc;
+    }, {});
+
+    const topModelo = Object.entries(modeloCount).sort((a, b) => b[1] - a[1])[0];
+    if (topModelo) {
+        elements.kpiTopModelo.textContent = topModelo[0];
+        elements.kpiTopModeloCount.textContent = `${topModelo[1]} ${topModelo[1] === 1 ? 'carro' : 'carros'}`;
     }
 }
 
