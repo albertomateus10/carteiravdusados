@@ -1,4 +1,4 @@
-const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1ZXum0nBBdqZSwIddWKTyh5IUswc20KHGdyvB36mGh_Q/gviz/tq?tqx=out:csv&gid=0';
+const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1ZXum0nBBdqZSwIddWKTyh5IUswc20KHGdyvB36mGh_Q/pub?output=csv';
 
 // Global state
 let allData = [];
@@ -97,7 +97,14 @@ async function fetchData() {
 
     try {
         const response = await fetch(SHEETS_URL);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (!response.ok) {
+            // Se der erro 404 ou 401, muito provavelmente a planilha não está publicada na web
+            if (response.status === 404 || response.status === 401 || response.status === 403) {
+                throw new Error('PLANILHA_NAO_PUBLICADA');
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const csvText = await response.text();
         console.log('Dados recebidos, tamanho:', csvText.length);
@@ -114,12 +121,16 @@ async function fetchData() {
         }
     } catch (error) {
         console.error('Erro detalhado:', error);
+
         let msg = 'Erro ao carregar dados: ' + error.message;
-        if (error.message === 'Failed to fetch' && window.location.protocol === 'file:') {
-            msg += '\n\nO navegador bloqueou o acesso à planilha por segurança (CORS). Isso acontece ao abrir o arquivo diretamente.\n\nPara funcionar: Use um servidor local (como npx serve) ou tente abrir em outro navegador.';
+
+        if (error.message === 'PLANILHA_NAO_PUBLICADA' || error.message.includes('Failed to fetch')) {
+            // 'Failed to fetch' pode ser CORS, o que também acontece se não estiver público
+            msg = `⚠️ AÇÃO NECESSÁRIA:\n\nPara que o dashboard funcione corretamente e leia todos os valores (mesmo com R$), você precisa publicar a planilha na web:\n\n1. Na sua planilha Google, clique em "Arquivo" > "Compartilhar" > "Publicar na Web"\n2. Escolha "Documento Inteiro" e "CSV"\n3. Clique em "Publicar"\n\nApós fazer isso, recarregue esta página.`;
         } else {
-            msg += '\n\nCertifique-se que a planilha está publicada e você tem conexão com a internet.';
+            msg += '\n\nCertifique-se que você tem conexão com a internet.';
         }
+
         alert(msg);
     } finally {
         elements.loading.classList.remove('active');
@@ -235,9 +246,12 @@ function inferYear(monthStr) {
  */
 function parseCurrency(val) {
     if (!val) return 0;
-    // Format: "R$ 89.000,00" -> 89000
-    // Remove R$ (case insensitive because users might type it manually), dots, and convert comma to dot
-    let clean = val.replace(/R\$/gi, '').replace(/\./g, '').replace(',', '.').trim();
+    // Remove tudo que NÃO for dígito, vírgula ou sinal de menos
+    // Ex: "R$ 45.000,00" -> "45000,00"
+    // Ex: "abc 100" -> "100"
+    let clean = val.replace(/[^\d,-]/g, '');
+    // Troca vírgula por ponto para o JS entender como float
+    clean = clean.replace(',', '.');
     return parseFloat(clean) || 0;
 }
 
@@ -331,7 +345,7 @@ function render() {
             <td>${item.vendedor}</td>
             <td>${item.modelo}</td>
             <td>${item.placa}</td>
-            <td class="valor-cell">${item.valorRaw || formatCurrency(item.valor)}</td>
+            <td class="valor-cell">${formatCurrency(item.valor)}</td>
         </tr>
     `).join('');
 
